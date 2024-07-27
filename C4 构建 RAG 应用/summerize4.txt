@@ -1,0 +1,38 @@
+一、LLM接入LangChain:
+Langchain为基于LLM开发自定义应用提供了高效的开发框架，便于开发者激发LLM的强大能力，构建LLM应用。
+Langchain没有接入zhipuai，所以自定义接入就行，方便后续使用。
+同样也可以接入其他的模型
+zhipuai_llm.py定义了zhipuaiLLM的类
+二、构建检索问答链：
+问题1：分为哪几部分？
+1.加载向量数据库，这里加载的向量数据库就是C3构建的向量数据库
+2.创建LLM：疑问：为什么在这里要创建LLM呢？   
+还是用zhipuai_llm.py文件中的ZhipuAILLM来创建LLM，为了方便下面接入模型中。
+3.构建检索问答链：
+疑问：怎么构建检索问答链？
+step1：
+from langchain.chains import RetrievalQA
+qa_chain = RetrievalQA.from_chain_type(llm,
+                                       retriever=vectordb.as_retriever(),
+                                       return_source_documents=True,
+                                       chain_type_kwargs={"prompt":QA_CHAIN_PROMPT})
+用langchain.chains中的RetrievalQA类来构建问答链，
+解释一下：
+retriever是构造一个检索器，用以检索和问题相关的原始文档，
+return_source_documents=True,表示原始文档也会返回
+step2：
+关键在于QA_CHAIN_PROMPT怎么理解：
+from langchain.prompts import PromptTemplate
+template = """使用以下上下文来回答最后的问题。如果你不知道答案，就说你不知道，不要试图编造答案。最多使用三句话。尽量使答案简明扼要。总是在回答的最后说“谢谢你的提问！”。
+{context}
+问题: {question}
+"""
+QA_CHAIN_PROMPT = PromptTemplate(input_variables=["context","question"],template=template)
+在这里用PromptTemplate类创造了一个问答链提示词，那么问题在于{context}和{question}是怎么被填充的呢？
+当输入问题的时候，retriever在本地向量数据库中检索出来的结果会输入到{context}中，问题会输出到{question}中
+然后把QA_CHAIN_PROMPT放入到llm参数中进行输出答案。。。。
+step3：得到输出
+result = qa_chain({"query": question_1})
+result包括输入和输出
+
+

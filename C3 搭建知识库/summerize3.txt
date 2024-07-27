@@ -1,0 +1,28 @@
+一、词向量及向量知识库介绍：
+问题1：什么是词向量？什么是向量数据库？
+词向量（embedding）是将token转换成向量的形式；
+向量数据库是专门用来存储向量的数据库系统，在向量数据库中，数据被表示为特定的向量形式，这些向量可以是图片，可以是文字等等。
+问题2：图片和文字放到一个向量数据库中，怎么来设置向量呢？
+多模态学习：CLIP：一种多模态模型，将图像和文本嵌入到同一向量空间，可以进行图像-文本匹配和检索。
+如果文字和文字放在一起，形式都一样，设置向量的方式是直观地的，图片也是一样。
+二、使用Embedding API：
+问题1：怎么通过Embedding Api来搭建RAG系统呢？ 
+问题2：Embedding API有什么用呢？ 将输入text转换为向量形式。
+三、数据处理：
+问题1：为什么要进行数据处理？ 为构建本地知识库，我们需要对多种类型的本地存储文档进行处理。
+问题2：数据需要进行什么处理？数据读取、数据清洗、文档分割
+问题3：对于各方面的处理，怎么进行？
+数据读取：选择langchain的PDF读取程序和Markdown读取程序
+数据清洗：主要是使用正则表达式去清除掉多余的部分
+文档分割：因为如果检索结果是单个文档，那么单个文档的知识过长就会导致回答问题的时候超过模型的推理能力，因此把文档按照规则分割成chunk，回答问题的时候直接回答相应数量的chunk
+四、搭建并使用向量数据库：
+问题1：怎么搭建向量数据库？
+读取文件、构建chroma数据库：将数据读取，然后文档分割之后用
+vectordb = Chroma.from_documents(
+    documents=split_docs[:20], # 为了速度，只选择前 20 个切分的 doc 进行生成；使用千帆时因QPS限制，建议选择前 5 个doc
+    embedding=embedding,
+    persist_directory=persist_directory  # 允许我们将persist_directory目录保存到磁盘上
+)构建即可
+问题2：向量检索的方法有哪些？
+sim_docs = vectordb.similarity_search(question,k=3) 相似度检索
+mmr_docs = vectordb.max_marginal_relevance_search(question,k=3) MMR检索
